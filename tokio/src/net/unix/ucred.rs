@@ -31,7 +31,7 @@ impl UCred {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd"))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd", target_os = "redox"))]
 pub(crate) use self::impl_linux::get_peer_cred;
 
 #[cfg(any(target_os = "netbsd"))]
@@ -46,7 +46,7 @@ pub(crate) use self::impl_macos::get_peer_cred;
 #[cfg(any(target_os = "solaris", target_os = "illumos"))]
 pub(crate) use self::impl_solaris::get_peer_cred;
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd"))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd", target_os = "redox"))]
 pub(crate) mod impl_linux {
     use crate::net::unix::UnixStream;
 
@@ -57,6 +57,13 @@ pub(crate) mod impl_linux {
     use libc::sockpeercred as ucred;
     #[cfg(any(target_os = "linux", target_os = "android"))]
     use libc::ucred;
+    #[cfg(target_os = "redox")]
+    #[repr(C)]
+    pub struct ucred {
+        pid: libc::pid_t,
+        uid: libc::uid_t,
+        gid: libc::gid_t,
+    }
 
     pub(crate) fn get_peer_cred(sock: &UnixStream) -> io::Result<super::UCred> {
         use std::os::unix::io::AsRawFd;
